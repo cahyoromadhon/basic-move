@@ -1,0 +1,1 @@
+This repository contains a collection of simple programs I created as part of my journey to learn Move programming language. Each piece of code reflects my progress and efforts in understanding fundamental to intermediate Move concepts. The projects here are designed to showcase my learning journey in a practical, hands-on way.
