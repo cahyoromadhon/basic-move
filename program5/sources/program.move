@@ -56,4 +56,25 @@ module program5::namaModul {
     // transfer::transfer(t, addr)
     // } 
     // note: sekarang, semua orang(address) dapat menggunakan object ini
+
+
+    // Mari bahas owned object and shared object lebih dalam
+    // pada owned object dibagi menjadi 2 yaitu: owned by an address & owned by another object
+
+    // owned by an address, ini memungkinkan kepemilikan dari object ini dipindahkan ke alamat address
+    // ex: transfer::transfer(TranscriptObject, tx_context::sender(ctx))
+    // tx_context::sender(ctx) ini adalah penerima / recipient
+
+    // owned by another project, kepemilikan dari object dipindahkan ke object yang lain dan object yang dimiliki ini dinamakan child object dan object yang memiliki adalah parent object (struktur hierarki) namun yang membuat sui ini special adalah tidak peduli apakah itu child object atau parent object sekalipun akan tetap disimpan di sui secara global storage dan memiliki id unik nya masing-masing tanpa bergabung kedalam struktur parent nya, hal ini memudahkan skalabilitas
+    // ex: dynamic_object_field
+    // akan dibahas lebih lanjut nanti
+
+    // sekarang mari beralih ke shared object
+    // shared immutable
+    // seperti namanya sekali object ini dipublish maka tidak akan pernah bisa diubah lagi dan object ini bisa digunakan secara bebas oleh object lain
+    // ex: transfer::freeze_object(obj;
+
+    // shared mutable
+    // object ini bisa digunakan oleh siapa saja, selain bisa dibaca mereka juga bisa mengubahnya namun agar bisa diubah membutuhkan global ordering melalui consensus layer protocol
+    // ex: transfer::share_object(obj);
 }
