@@ -1,15 +1,15 @@
 module program4::hello {
 
-    public struct HelloWorldObject has key {
+    public struct HelloWorldObject has key, store {
         id: UID,
-        text: vector<u8>
+        text: std::string::String
     }
 
     public entry fun mint(ctx: &mut TxContext) {
         let object = HelloWorldObject {
             id: object::new(ctx),
-            text: b"Hello World!"
+            text: std::string::utf8(b"Hello World!")
         };
-        transfer::transfer(object, tx_context::sender(ctx));
+        transfer::public_transfer(object, tx_context::sender(ctx));
     }
 }
