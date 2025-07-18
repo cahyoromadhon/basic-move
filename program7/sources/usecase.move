@@ -13,12 +13,13 @@ module program7::usecase {
         value: u64,
     }
 
-    public fun create_gift_box(value: u64, ctx: &mut TxContext): GiftBox {
-        let gift = Gift {value};
-        GiftBox {
+    public entry fun create_gift_box(value: u64, ctx: &mut TxContext) {
+        let gift = Gift { value };
+        let box = GiftBox {
             id: object::new(ctx),
             gift,
-        }
+        };
+        transfer::transfer(box, tx_context::sender(ctx));
     }
 
 }
@@ -42,3 +43,13 @@ module program7::usecase {
 // object yang dibuat dari fungsi ini akan menjadi object independent yang artinya tak terikat apapun sementara ketika kita ingin mengakses Gift didalam GiftBox baru tersebut maka kita diharuskan mengakses GiftBox terlebih dahulu
 // sehingga ini seperti implementasi dalam dunia nyata, agar kita bisa mencoba hadiah(Gift) kit harus membuka kotak hadiah(GiftBox) terlebih dahulu
 // cmiiw
+
+// ada perubahan terkait code nya karena ketika aku coba panggil fungsinya, memang benar fungsi berhasil dibuat namun tidak ada tindakan setelah fungsi dibuat
+// karena di Move ketika object berhasil dibuat itu harus langsung ditangani entah dikirimkan ke alamat kita atau mungkin dibuang/dihapus
+// dan karena tidak ada tindakan maka move mengira program ini akan dihapus namun jika kita menginginkan untuk menghapusnya maka dibutuhkan ability drop sementara kita tidak memilikinya maka terjadilah error
+
+// code yang diubah: deklarasi object bernama GiftBox tidak langsung dideklarasikan setelah parameter selesai dideklarasikan dan semuanya sama menggunakan keyword let yang berarti ini dideklarasikan kedalam sebuah variabel bernama box
+// dengan adanya perubahan ini maka code jauh lebih bisa untuk dibaca daripada harus membaca kode yang sebelumnya ditulis
+// kemudian setelah object selesai dibuat maka masuk ke tahap fungsi selanjutnya yaitu transfer ownershipnya ke alamat pemanggil yang dalam hal ini sender atau alamat pemanggil fungsi itu sendiri
+// logikanya seperti ini: deklarasikan built-in function dengan parameter (object, tx_context)
+// sehingga ini memungkinkan pemindahan ownership kedalam object tersebut
