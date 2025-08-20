@@ -5,7 +5,7 @@ module program2::message {
         content: vector<u8>, // Menyimpan string sebagai vector<u8>
     }
 
-    public entry fun create(content: vector<u8>, ctx: &mut TxContext) {
+    entry fun create(content: vector<u8>, ctx: &mut TxContext) {
         let sms = Pesan {
             id: object::new(ctx),
             content,
@@ -13,7 +13,7 @@ module program2::message {
         transfer::transfer(sms, tx_context::sender(ctx));
     }
 
-    public entry fun update(sms: &mut Pesan, new_content: vector<u8>) {
+    entry fun update(sms: &mut Pesan, new_content: vector<u8>) {
         sms.content = new_content;
     }
 }
