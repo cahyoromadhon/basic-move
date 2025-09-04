@@ -9,7 +9,7 @@ module program11::storage {
         message: String,
     }
 
-    public entry fun create_message(message: String, ctx: &mut TxContext) {
+    entry fun create_message(message: String, ctx: &mut TxContext) {
         let storage = Storage {
             id: object::new(ctx),
             message: message,
@@ -17,7 +17,7 @@ module program11::storage {
         transfer::transfer(storage, tx_context::sender(ctx));
     }
 
-    public entry fun update_message(storage: &mut Storage, new_message: String) {
+    entry fun update_message(storage: &mut Storage, new_message: String) {
         storage.message = new_message;
     }
     // deklarasikan fungsi input untuk mengupdate pesan

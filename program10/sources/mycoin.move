@@ -21,7 +21,7 @@ module program10::mycoin {
     }
 
     /// Fungsi untuk mencetak koin (hanya pemilik treasury_cap yang bisa)
-    public entry fun mint(
+    entry fun mint(
         treasury_cap: &mut TreasuryCap<MYCOIN>,
         amount: u64,
         recipient: address,
@@ -45,7 +45,7 @@ module program10::simple_wallet {
     }
 
     /// Membuat wallet baru
-    public entry fun create_wallet(ctx: &mut TxContext) {
+    entry fun create_wallet(ctx: &mut TxContext) {
         let wallet = Wallet {
             id: object::new(ctx),
             balance: balance::zero(),
@@ -54,13 +54,13 @@ module program10::simple_wallet {
     }
 
     /// Menyetor koin ke wallet
-    public entry fun deposit(wallet: &mut Wallet, coin: Coin<MYCOIN>) {
+    entry fun deposit(wallet: &mut Wallet, coin: Coin<MYCOIN>) {
         let coin_balance = coin::into_balance(coin);
         balance::join(&mut wallet.balance, coin_balance);
     }
 
     /// Menarik koin dari wallet
-    public entry fun withdraw(wallet: &mut Wallet, amount: u64, ctx: &mut TxContext) {
+    entry fun withdraw(wallet: &mut Wallet, amount: u64, ctx: &mut TxContext) {
         assert!(balance::value(&wallet.balance) >= amount, 0); // Validasi saldo
         let withdrawn_balance = balance::split(&mut wallet.balance, amount);
         let coin = coin::from_balance(withdrawn_balance, ctx);
