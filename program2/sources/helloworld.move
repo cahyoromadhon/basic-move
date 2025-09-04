@@ -1,4 +1,4 @@
-module program2::message {
+module program2::helloworld {
 
     public struct Pesan has key, store {
         id: UID,

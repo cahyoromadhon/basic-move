@@ -5,7 +5,7 @@ module program4::hello {
         text: std::string::String
     }
 
-    public entry fun mint(ctx: &mut TxContext) {
+    entry fun mint(ctx: &mut TxContext) {
         let object = HelloWorldObject {
             id: object::new(ctx),
             text: std::string::utf8(b"Hello World!")

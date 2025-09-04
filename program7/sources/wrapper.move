@@ -1,7 +1,7 @@
 // Hari ini kita akan mempelajari sebuah konsep bernama Object Wrapping
 #[allow(unused_field)]
 
-module program7::example { 
+module program7::wrapper { 
 
     public struct Wrapper has key {
         id: UID,

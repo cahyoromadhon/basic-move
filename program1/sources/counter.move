@@ -7,7 +7,7 @@ module program1::counter {
     }
 
     // Fungsi untuk membuat counter baru
-    public entry fun create(ctx: &mut TxContext) {
+    entry fun create(ctx: &mut TxContext) {
         let counter = Counter {
             id: object::new(ctx),
             value: 0,
@@ -16,7 +16,7 @@ module program1::counter {
     }
 
     // Fungsi untuk menambah nilai counter
-    public entry fun increment(counter: &mut Counter) {
+    entry fun increment(counter: &mut Counter) {
         counter.value = counter.value + 1;
     }
 

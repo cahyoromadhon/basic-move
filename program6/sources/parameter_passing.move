@@ -1,4 +1,4 @@
-module program6::program {
+module program6::parameter_passing {
     // Contoh Parameter Passing by Value
     // Sebelum itu deklarasikan terlebih dahulu struct nya
     public struct TranscriptObject has key, store {

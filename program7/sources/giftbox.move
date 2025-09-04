@@ -2,7 +2,7 @@
 // object baru bisa dibuat ketika fungsi dijalankan
 // jadi selama fungsi tersebut belum berjalan, object tidak benar-benar belum dibuat, hanya sebatas disimpan saja di storage
 
-module program7::usecase {
+module program7::giftbox {
 
     public struct GiftBox has key {
         id: UID,

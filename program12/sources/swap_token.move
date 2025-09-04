@@ -1,4 +1,4 @@
-module program12::swap {
+module program12::swap_token {
     use sui::coin::{Self, Coin};
     use sui::balance::{Self, Balance};
 
