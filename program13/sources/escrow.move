@@ -1,188 +1,85 @@
-// Ini adalah sebuah resource yang didapatkan dari github mas nathan terkait escrow program
-// dan malam ini akan kita beda apasaja kekurangan yang aku alami saat ini dan kekurangan tersebut akan menjadi module materi yang akan dipelajari untuk besok
-// Letsgo kita breakdown
-// setelah aku coba utak atik sedikit ternyata kodenya masih relevan untuk digunakan berbeda dengan kode dari grok
-
 module program13::escrow {
+    use sui::balance::{Self, Balance};
     use sui::coin::{Self, Coin};
-    use sui::balance::Balance;
-// deklarasi module dengan nama package program13 dan nama module escrow
-// mengimport library penting dari module official sui
-// Pelajari module coin [?]
-// pelajari module balance [?]
 
-    /// Inactive escrow
-    const EInactiveEscrow: u64 = 0;
+// Error Handling
+    const EInactiveEscrow: u64 = 0; // Kode error 0 menunjukkan escrow tidak aktif saat aksi diminta.
+    const ENotEnoughBalance: u64 = 1; // Kode error 1 menunjukkan koin pengambil tidak cukup untuk memenuhi expected_amount.
 
-    /// Not enought balance
-    const ENotEnoughBalance: u64 = 1;
-// deklarasi variabel menggunakan keyword const
-// namun untuk apa? menghindari error [?]
-
+// Mendefinisikan struct Escrow berparameter jenis T (offered) dan Y (expected) sebagai phantom; memiliki ability key untuk shared object.
     public struct Escrow<phantom T, phantom Y> has key {
         id: UID,
-        offeror: address,
-        offered_token: Balance<T>,
-        expected_amount: u64,
-        active: bool,
+        offeror: address, // Alamat pembuat penawaran (yang menawarkan token).
+        offered_token: Balance<T>, // Saldo token yang ditawarkan, disimpan sebagai Balance<T> agar bisa berada dalam shared object.
+        expected_amount: u64, // Jumlah token EXPECTED_TOKEN yang diminta penawar sebagai imbalan.
+        active: bool, // Status escrow
     }
-// struct yang digunakan disini cukup beda karena menggunakan elemen phantom
-// Pelajari phantom [?]
 
-    public entry fun create_offer<OFFERED_TOKEN, EXPECTED_TOKEN>(
-        offeror_coin: &mut Coin<OFFERED_TOKEN>,
-        offered_amount: u64,
-        expected_amount: u64,
-        ctx: &mut TxContext,
+// Fungsi entry untuk membuat penawaran escrow antara OFFERED_TOKEN (ditawarkan) dan EXPECTED_TOKEN (diminta).
+    entry fun create_offer<OFFERED_TOKEN, EXPECTED_TOKEN>( 
+
+        // Parameter Fungsi: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        offeror_coin: &mut Coin<OFFERED_TOKEN>, // Referensi mutable ke koin penawar dari jenis OFFERED_TOKEN (sumber dana yang akan ditahan).
+        offered_amount: u64, // Jumlah OFFERED_TOKEN yang akan dimasukkan ke escrow.
+        expected_amount: u64, // Jumlah EXPECTED_TOKEN yang diharapkan sebagai pembayaran dari pengambil.
+        ctx: &mut TxContext, // Konteks transaksi
     ) {
-        let sender = tx_context::sender(ctx);
-        let id = object::new(ctx);
+        // Local Variable Declaration: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        let sender = tx_context::sender(ctx); // Mendapatkan alamat pengirim transaksi (pencipta penawaran).
+        let id = object::new(ctx); // Membuat UID baru untuk objek Escrow
+        let offered_token = coin::split<OFFERED_TOKEN>(offeror_coin, offered_amount, ctx); // Memisahkan sejumlah offered_amount dari koin penawar menjadi koin baru (offered_token).
 
-        let offered_token = coin::split<OFFERED_TOKEN>(offeror_coin, offered_amount, ctx);
-
-        transfer::share_object(
-            Escrow<OFFERED_TOKEN, EXPECTED_TOKEN> {
-                id,
-                offeror: sender,
-                offered_token: coin::into_balance<OFFERED_TOKEN>(offered_token),
-                expected_amount: expected_amount,
-                active: true,
+        // Fungsi Transfer ke Shared Storage: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        transfer::share_object( // Men-share objek Escrow ke shared storage sehingga dapat diakses publik.
+            Escrow<OFFERED_TOKEN, EXPECTED_TOKEN> { // Membangun instance Escrow dengan parameter jenis token.
+                id, // Menetapkan UID yang baru dibuat.
+                offeror: sender, // Menyimpan alamat penawar sebagai pemilik yang akan menerima EXPECTED_TOKEN.
+                offered_token: coin::into_balance<OFFERED_TOKEN>(offered_token), // Mengonversi koin yang di-split menjadi Balance<T> untuk disimpan pada shared object.
+                expected_amount: expected_amount, // Menyimpan jumlah EXPECTED_TOKEN yang diharapkan dari pengambil.
+                active: true, // Menandai escrow masih aktif sehingga bisa diambil (take).
             }
         );
     }
-// sepertinya fungsi ini berguna untuk membuat penawaran
-// untuk fieldsnya tidak ada yang aneh, mungkin ini pengaruh dar module yang dibawa menggunakan use yaitu sui::coin
-// maka agar mengetahui alasan dibaliknya aku perlu mempelajarinya
-// kemudian didalam kurung kurawal terdapat deklarasi variabel lokal
-// varibael lokal bernama sender diisi dengan ctx sender
-// id dibuat ulang menggunakan object::new(ctx)
-// variabel ofdered_token melakukan fungsi split pada module coin
-// pelajar module coin [?]
-// kemudian object ini akan menjadi share object
 
-    public entry fun take_offer<OFFERED_TOKEN, EXPECTED_TOKEN>(
-        escrow: &mut Escrow<OFFERED_TOKEN, EXPECTED_TOKEN>,
-        taker_coin: &mut Coin<EXPECTED_TOKEN>,
-        ctx: &mut TxContext,
+    // Fungsi entry untuk mengambil penawaran escrow yang sudah dibuat
+    entry fun take_offer<OFFERED_TOKEN, EXPECTED_TOKEN>( 
+        // Parameter Fungsi: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        escrow: &mut Escrow<OFFERED_TOKEN, EXPECTED_TOKEN>, // Referensi mutable ke objek Escrow shared (diambil dari storage oleh caller).
+        taker_coin: &mut Coin<EXPECTED_TOKEN>, // Referensi mutable ke koin dari pengambil berjenis EXPECTED_TOKEN sebagai pembayaran.
+        ctx: &mut TxContext, // Konteks transaksi
     ) {
-        assert!(escrow.active != false, EInactiveEscrow);
+        // Validasi dan Aksi Transaksi: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        assert!(escrow.active != false, EInactiveEscrow); // Memastikan escrow masih aktif; jika tidak, gagal dengan EInactiveEscrow.
         assert!(coin::value<EXPECTED_TOKEN>(taker_coin) >= escrow.expected_amount, ENotEnoughBalance);
+        // Memastikan saldo koin pengambil cukup untuk memenuhi expected_amount; jika tidak, gagal dengan ENotEnoughBalance.
 
-        let expected_coin = coin::split<EXPECTED_TOKEN>(taker_coin, escrow.expected_amount, ctx);
-
-        let sender = tx_context::sender(ctx);
+        // Local Variable Declaration: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        let expected_coin = coin::split<EXPECTED_TOKEN>(taker_coin, escrow.expected_amount, ctx); // Memisahkan expected_amount dari koin pengambil menjadi koin baru sebagai pembayaran.
+        let sender = tx_context::sender(ctx); // Mendapatkan alamat pengambil (pengirim transaksi saat ini).
         transfer::public_transfer(expected_coin, escrow.offeror);
-        let offered_token_value = sui::balance::value<OFFERED_TOKEN>(&escrow.offered_token);
-        let offered_token = sui::balance::split<OFFERED_TOKEN>(&mut escrow.offered_token, offered_token_value);
+        // Mentransfer koin EXPECTED_TOKEN hasil split kepada alamat offeror (penawar).
+        let offered_token_value = balance::value<OFFERED_TOKEN>(&escrow.offered_token);
+        // Membaca nilai total saldo Balance<T> yang ditahan di escrow.
+        let offered_token = balance::split<OFFERED_TOKEN>(&mut escrow.offered_token, offered_token_value);
+        // Memisahkan seluruh Balance<T> dalam escrow menjadi Balance<T> yang akan dikeluarkan (mengosongkan escrow).
+
+        // Transfer ke Taker: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         transfer::public_transfer(coin::from_balance<OFFERED_TOKEN>(offered_token, ctx), sender);
-
+        // Mengonversi Balance<T> menjadi Coin<T> dan mentransfernya kepada pengambil (taker).
         escrow.active = false;
-// deklarasi fungsi yang bisa melakukan entry dan sepertinya berfungsi sebagai mengambil penawaran
-// pelajari assert! [?]
+        // Menandai escrow tidak aktif (selesai dipenuhi).
 
 
-// Pelajari [?] List:
-// Pelajari Module sui::coin
-// Pelajari Module sui::module
-// Pelajari Assert!
-
-// Pelajari Deklarasi Variabel menggunakan keyword Const
-// Pelajari phantom yang sepertinya ada kaitannya dengan module coin
-
-
-
-
-
-
-
-
-
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // shared object deletation is not supported at the moment
         // this will be supported: https://github.com/MystenLabs/sui/issues/2083
+
         // let Escrow {
         //     id: id,
         //     offeror: offeror,
         //     offered_token: offered_token,
         //     expected_amount: expected_amount,
         // } = escrow;
-        
         // object::delete(id);
     }
 }
-
-
-//     #[test_only]
-//     struct CANDY has drop {}
-
-//     #[test_only]
-//     struct PIE has drop {}
-
-//     #[test]
-//     public fun test_offer_and_take() {
-//         use sui::test_scenario;
-//         // use std::debug;
-//         use std::vector;
-        
-//         // create test addresses
-//         let admin = @0xBABE;
-//         let offeror = @0x0FFE;
-//         let taker = @0x4CCE;
-
-//         let scenario_val = test_scenario::begin(admin);
-//         let scenario = &mut scenario_val;
-//         {
-//             let minted_candy_coin = coin::mint_for_testing<CANDY>(1000, test_scenario::ctx(scenario));
-//             transfer::public_transfer(minted_candy_coin, offeror);
-//             let minted_pie_coin = coin::mint_for_testing<PIE>(20, test_scenario::ctx(scenario));
-//             transfer::public_transfer(minted_pie_coin, offeror);
-
-//             let minted_pie_coin = coin::mint_for_testing<PIE>(1000, test_scenario::ctx(scenario));
-//             transfer::public_transfer(minted_pie_coin, taker);
-//         };
-//         test_scenario::next_tx(scenario, offeror);
-//         {
-//             let candy_coin = test_scenario::take_from_sender<Coin<CANDY>>(scenario);
-//             create_offer<CANDY, PIE>(
-//                 &mut candy_coin,
-//                 100,
-//                 1000,
-//                 test_scenario::ctx(scenario)
-//             );
-//             assert!(coin::value<CANDY>(&mut candy_coin) == 900, 2);
-//             test_scenario::return_to_sender(scenario, candy_coin);
-//         };
-//         test_scenario::next_tx(scenario, taker);
-//         {
-//             let escrow = test_scenario::take_shared<Escrow<CANDY, PIE>>(scenario);
-//             assert!(escrow.active == true, 1);
-//             assert!(escrow.offeror == offeror, 2);
-//             assert!(escrow.expected_amount == 1000, 3);
-
-//             let pie_coin = test_scenario::take_from_sender<Coin<PIE>>(scenario);
-//             take_offer<CANDY, PIE>(
-//                 &mut escrow,
-//                 &mut pie_coin,
-//                 test_scenario::ctx(scenario));
-//             test_scenario::return_to_sender(scenario, pie_coin);
-//             assert!(escrow.active == false, 4);
-//             test_scenario::return_shared<Escrow<CANDY, PIE>>(escrow);
-//         };
-//         test_scenario::next_tx(scenario, admin);
-//         {
-//             let ids = test_scenario::ids_for_address<Coin<PIE>>(offeror);
-            
-//             let sum = 0;
-//             while (!vector::is_empty(&ids)) {
-//                 let id = vector::pop_back(&mut ids);
-//                 let offeror_pie_coin = test_scenario::take_from_address_by_id<Coin<PIE>>(
-//                     scenario,
-//                     offeror,
-//                     id);
-//                 sum = sum + coin::value<PIE>(&offeror_pie_coin);
-//                 test_scenario::return_to_address(offeror, offeror_pie_coin);
-//             };
-//             assert!(sum == 1020, 4);
-//         };
-//         test_scenario::end(scenario_val);
-//     }
-// }
