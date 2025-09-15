@@ -52,3 +52,22 @@ module program21::my_hero {
         transfer::public_transfer(hero, tx_context::sender(ctx));
     }
 }
+
+// Deklarasi Module
+// Import Library 
+// Struktur NFT
+// Struktur One Time Witness dideklarasikan dengan identifier HURUF_BESAR, ability drop, dan tanpa field apapun
+// Fungsi init untuk insialisasi NFT, fungsi ini hanya bisa dipanggil sekali ketika di deploy
+// Parameter otw adalah objek One Time Witness yang akan diklaim sebagai publisher
+// Publisher berguna untuk menginisialisasi objek display
+// Vektor array berisi nama-nama field yang akan ditampilkan pada metadata NFT
+// Vektor array berisi value dari field yang akan ditampilkan pada metadata NFT
+// Fungsi claim untuk mengklaim objek otw sebagai publisher
+// Membuat objek display baru dengan tipe Hero, menggunakan publisher, keys, values, dan context transaksi
+// Memanggil fungsi update_version untuk mengupdate versi metadata NFT
+// Mentransfer kepemilikan objek publisher ke address pengirim transaksi
+// Mentransfer kepemilikan objek display ke address pengirim transaksi
+// Fungsi mint untuk mencetak NFT baru
+// Parameter name, url, description, dan creator adalah field-field yang akan diisi pada metadata NFT
+// Membuat objek Hero baru dengan field-field yang diisi dari parameter fungsi mint
+// Mentransfer kepemilikan objek hero ke address pengirim transaksi
