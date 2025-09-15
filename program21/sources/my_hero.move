@@ -45,6 +45,6 @@ module program21::my_hero {
             name,
             url,
         };
-        sui::transfer::transfer(hero, tx_context::sender(ctx));
+        transfer::public_transfer(hero, tx_context::sender(ctx));
     }
 }
