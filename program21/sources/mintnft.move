@@ -24,15 +24,16 @@ module program21::mintnft {
         url: String,
     }
 
-    public struct MY_OTW has drop {}
+    public struct MINTNFT has drop {}
 
-    fun init(otw: MY_OTW, ctx: &mut TxContext) {
+    fun init(otw: MINTNFT, ctx: &mut TxContext) {
         let keys = vector[
             std::string::utf8(b"Name"),
             std::string::utf8(b"Description"),
             std::string::utf8(b"Image"),
             std::string::utf8(b"Creator"),
         ];
+
         let values = vector[
             std::string::utf8(b"{nama}"),
             std::string::utf8(b"{deskripsi}"),
