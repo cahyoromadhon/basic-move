@@ -28,10 +28,10 @@ module program21::mintnft {
 
     fun init(otw: MINTNFT, ctx: &mut TxContext) {
         let keys = vector[
-            std::string::utf8(b"Name"),
-            std::string::utf8(b"Description"),
-            std::string::utf8(b"Image"),
-            std::string::utf8(b"Creator"),
+            std::string::utf8(b"name"),
+            std::string::utf8(b"description"),
+            std::string::utf8(b"image_url"),
+            std::string::utf8(b"creator"),
         ];
 
         let values = vector[
@@ -42,12 +42,8 @@ module program21::mintnft {
         ];
 
         let publisher = package::claim(otw, ctx);
-        let mut metadata = display::new_with_fields<NFT>(
-            &publisher,
-            keys,
-            values,
-            ctx,
-        );
+        let mut metadata = display::new_with_fields<NFT>(&publisher, keys, values, ctx);
+
         metadata.update_version();
 
         transfer::public_transfer(publisher, ctx.sender());
