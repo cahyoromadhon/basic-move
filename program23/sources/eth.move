@@ -1,4 +1,4 @@
-module program25::eth {
+module program23::eth {
     use sui::url;
     use sui::coin;
 

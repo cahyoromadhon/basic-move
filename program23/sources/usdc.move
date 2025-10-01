@@ -1,4 +1,4 @@
-module program25::usdc {
+module program23::usdc {
     use sui::url;
     use sui::coin;
 
