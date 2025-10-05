@@ -45,16 +45,37 @@ module program25::dex {
 
     // AccountCap berasal dari module Deepbook custodian_v2, ini adalah resource yang memberikan kemampuan kepada contract untuk berinteraksi dengan Deepbook, seperti membuat pool baru, menempatkan order, dan lain-lain
 
-    #[allow(unused_function)]
-        fun init(witness: DEX, ctx: &mut TxContext) {
-            let (treasury_cap, metadata) = coin::create_currency(
-            witness,
-            9,
-            b"DEX",
-            b"Dex Coin", 
-            b"", 
-            option::none(), 
-            ctx
-            );
-        }
+    fun init(witness: DEX, ctx: &mut TxContext) {
+        let (treasury_cap, metadata) = coin::create_currency(
+        witness,
+        9,
+        b"DEX",
+        b"Dex Coin", 
+        b"", 
+        option::none(), 
+        ctx
+        );
+        transfer::public_freeze_object(metadata);
+        transfer::share_object(Storage {
+            id: object::new(ctx),
+            dex_supply: coin::treasury_into_supply(treasury_cap), // Supply tracking
+            swaps: table::new(ctx),                                    // Trading history
+            account_cap: clob::create_account(ctx),                         // DeepBook integration
+            client_id: CLIENT_ID,                                           // Protocol config
+        });
+    }
+
+    // Alasan mengapa share_object menggunakan object Storage daripada treasury_cap secara langsung adalah karena program ini ditujukan untuk Defi yang dimana memberikan fungsionalitas tambahan dari pattern pada umumnya yang sebatas mint & burn dan pattern yang digunakan disini disebut Protocol Wrapper
+
+    // treausry_into_supply digunakan untuk mengkonversi TreasuryCap<DEX> menjadi Supply<DEX> yang memungkinkan kita untuk melacak total supply dari koin DEX
+
+    // table::new(ctx) digunakan untuk membuat Table baru yang akan digunakan untuk menyimpan informasi swap yang telah dilakukan oleh user
+
+    // Table adalah resource on-chain yang dapat menyimpan data secara persisten sehingga pada usecase kali ini table digunakan pada level instance karena nantinya setiap Storage akan memiliki table masing-masing yang berguna untuk menyimpan data swap yang telah dilakukan oleh user
+
+    // clob::create_account(ctx) digunakan untuk membuat akun Deepbook yang memungkinkan contract untuk berinteraksi dengan Deepbook
+
+    // client_id adalah ID unik yang digunakan untuk mengidentifikasi client pada Deepbook, ini diperlukan untuk menghubungkan contract dengan akun Deepbook yang sesuai
+
+    // pembuatan akun disini dilakukan sekali dan hanya dimiliki oleh contract saja, tidak untuk user, jadi contract inilah yang akan berinteraksi dengan Deepbook, bukan user secara langsung
 }
