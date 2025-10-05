@@ -44,4 +44,17 @@ module program25::dex {
     // Table<K, V> berasal dari module table, ini adalah resource yang dapat menyimpan pasangan key-value, dalam kasus ini kita menggunakan address sebagai key dan u64 sebagai value, ini digunakan untuk menyimpan informasi swap yang telah dilakukan oleh user seperti berapa banyak swap yang telah dilakukan oleh user tertentu dengan menggunakan value u64 sebagai penghitungnya
 
     // AccountCap berasal dari module Deepbook custodian_v2, ini adalah resource yang memberikan kemampuan kepada contract untuk berinteraksi dengan Deepbook, seperti membuat pool baru, menempatkan order, dan lain-lain
+
+    #[allow(unused_function)]
+        fun init(witness: DEX, ctx: &mut TxContext) {
+            let (treasury_cap, metadata) = coin::create_currency(
+            witness,
+            9,
+            b"DEX",
+            b"Dex Coin", 
+            b"", 
+            option::none(), 
+            ctx
+            );
+        }
 }
