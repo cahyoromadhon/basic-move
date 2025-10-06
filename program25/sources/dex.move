@@ -108,4 +108,46 @@ module program25::dex {
         transfer_coin(usdc, sender),
         transfer_coin(dex_coin, sender)
     }
+
+    public fun place_market_order(
+        self: &mut Storage,
+        pool: &mut Pool<ETH, USDC>,
+        account_cap: &AccountCap,
+        quantity: u64,
+        is_bid: bool,
+        base_coin: coin<ETH>,
+        quote_coin: coin<USDC>,
+        c: &Clock,
+        ctx: &mut TxContext
+        ): (coin<ETH>, coin<USDC>, coin<DEX>) {
+        let sender = tx_context::sender(ctx);
+        let client_order_id = 0;
+        let dex_coin = coin::zero(ctx);
+
+        if (table::contains(&self.swaps, sender)) {
+            let total_swaps = table::borrow_mut(&mut self.swaps, sender);
+            let new_total_swaps = *total_swaps + 1;
+            *total_swaps = new_total_swaps;
+            client_order_id = new_total_swaps;
+
+            if ((new_total_swaps % 2) == 0) {
+                coin::join(&mut dex_coin, coin::from_balance(balance::increase_supply(&mut self.dex_supply, FLOAT_SCALING), ctx));
+            };
+        } else {
+            table::add(&mut self, swaps, sender, 1);
+        };
+
+        let (eth_coin, usdc_coin) = clob::place_market_order<ETH, USDC>(
+            pool,
+            account_cap, 
+            client_order_id, 
+            quantity,
+            is_bid,
+            base_coin,
+            quote_coin,
+            c,
+            ctx
+        );
+        (eth_coin, usdc_coin, dex_coin)
+    }
 }
