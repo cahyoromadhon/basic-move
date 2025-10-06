@@ -150,4 +150,18 @@ module program25::dex {
         );
         (eth_coin, usdc_coin, dex_coin)
     }
+
+    public fun create_pool(fee: Coin<SUI>, ctx: &mut TxContext) {
+        clob: create_pool<ETH, USDC>(1 * FLOAT_SCALING, 1, fee, ctx)
+    }
+
+    public fun fill_pool(
+        self: &mut Storage,
+        pool: &mut Pool<ETH, USDC>,
+        c: &Clock,
+        ctx: &mut TxContext
+    ) {
+        create_ask_orders(self, pool, c, ctx)
+        create_bid_orders(self, pool, c, ctx)
+    }
 }
