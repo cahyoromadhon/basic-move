@@ -21,7 +21,7 @@ module program25::dex {
 
     public struct Data<phantom CoinType> has store {
         cap: TreasuryCap<CoinType>,
-        faucet_lcok: Table<address, u64>,
+        faucet_lock: Table<address, u64>,
     }
 
     // Data dideklarsikan menggunakan Generic Type Parameter CoinType, ini memungkinkan kita untuk membuat instance Data untuk berbagai tipe koin seperti Data<ETH> dan Data<USDC>
@@ -78,4 +78,11 @@ module program25::dex {
     // client_id adalah ID unik yang digunakan untuk mengidentifikasi client pada Deepbook, ini diperlukan untuk menghubungkan contract dengan akun Deepbook yang sesuai
 
     // pembuatan akun disini dilakukan sekali dan hanya dimiliki oleh contract saja, tidak untuk user, jadi contract inilah yang akan berinteraksi dengan Deepbook, bukan user secara langsung
+
+    public fun user_last_mint_epoch<CoinType>(self: &Storage, user: address): u64 {
+        let data = df::borrow<TypeName, data<CoinType>>(&self.id, get<CoinType>());
+
+        if (table::contains(&data.faucet_lock, user)) return *table::borrow(&data.faucet_lock, user);
+        0
+    }
 }
