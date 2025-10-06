@@ -86,8 +86,26 @@ module program25::dex {
         0
     }
 
-        public fun user_swap_count(self: &Storage, user: address): u64 {
+    public fun user_swap_count(self: &Storage, user: address): u64 {
         if table::contains(&self.swaps, user) return *table::borrow(&self.swaps, user);
         0
+    }
+
+    public fun entry_place_market_order(
+        self: &mut Storage,
+        pool: &mut Pool<ETH, USDC>,
+        account_cap: &AccountCap,
+        quantity: u64,
+        is_bid: bool,
+        base_coin: coin<ETH>,
+        quote_coin: coin<USDC>,
+        c: &Clock,
+        ctx: &mut TxContext
+    ) {
+        let (eth, usdc, coin_dex) = place_market_order(self, pool, account_cap, quantity, is_bid, base_coin, quote_coin, c, ctx);
+        let sender = tx_context::sender(ctx);
+        transfer_coin(eth, sender),
+        transfer_coin(usdc, sender),
+        transfer_coin(dex_coin, sender)
     }
 }
