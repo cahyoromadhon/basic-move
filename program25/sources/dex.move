@@ -85,4 +85,9 @@ module program25::dex {
         if (table::contains(&data.faucet_lock, user)) return *table::borrow(&data.faucet_lock, user);
         0
     }
+
+        public fun user_swap_count(self: &Storage, user: address): u64 {
+        if table::contains(&self.swaps, user) return *table::borrow(&self.swaps, user);
+        0
+    }
 }
