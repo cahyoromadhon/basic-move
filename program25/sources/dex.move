@@ -6,10 +6,10 @@ module program25::dex {
     use sui::table::{Self, Table};
     use sui::dynamic_field as df;
     use sui::coin::{Self, TreasuryCap, Coin};
-    use deepbook::clob_v2::{Self as clob, Pool};
-    use deepbook::custodian_v2::AccountCap;
-    use program25::eth;
-    use program25::usdc;
+    use deepbook::clob_v3::{Self as clob, Pool};
+    use deepbook::custodian_v3::AccountCap;
+    use program25::eth::ETH;
+    use program25::usdc::USDC;
 
     const CLIENT_ID: u64 = 122227; // Example client ID
     const MAX_U64: u64 = 18446744073709551615; // Maximum Value for u64, it used for infinity timestamp
@@ -163,5 +163,93 @@ module program25::dex {
     ) {
         create_ask_orders(self, pool, c, ctx)
         create_bid_orders(self, pool, c, ctx)
+    }
+
+    public fun create_state(
+        self: &mut Storage,
+        eth_cap: TreasuryCap<ETH>,
+        usdc_cap: TreasuryCap<USDC>,
+        ctx: &mut TxContext
+    ) {
+        df::add(&mut self.id, get<ETH>(), Data { cap: eth_cap, faucet_lock: table::new(ctx) });
+        df::add(&mut self.id, get<USDC>(), Data { cap: usdc_cap, faucet_lock: table::new(ctx) });
+    }
+
+    public fun mint_coin<CoinType>(self: &mut Storage, ctx: &mut TxContext): Coin<CoinType> {
+        let sender = tx_context::sender(ctx);
+        let current_epoch = tx_context::epoch(ctx);
+        let type = get<CoinType>();
+        let data = df::borrow_mut<TypeName, Data<CoinType>>(&mut self.id, type);
+        
+        if (table::contains(&data.faucet_lock, sender)) {
+            let last_mint_epoch = *table::borrow(&data.faucet_lock, sender);
+            assert!(current_epoch > last_mint_epoch, EAlreadyMintedThisEpoch);
+        } else {
+            table::add(&mut data.faucet_lock, sender, 0);
+        };
+
+        let last_mint_epoch = table::borrow_mut(&mut data.faucet_lock, sender);
+        *last_mint_epoch = tx_context::epoch(ctx);
+        coin::mint(&mut data.cap, if (type == get<USDC>()) 100 * FLOAT_SCALING else 1 * FLOAT_SCALING, ctx)
+    }
+
+    public fun create_ask_orders(
+        self: &mut Storage,
+        pool: &mut Pool<ETH, USDC>, 
+        c: &Clock,
+        ctx: &mut TxContext
+    ) {
+        let eth_data = df::borrow_mut<TypeName, Data<ETH>>(&mut self.id, get<ETH>());
+
+        clob::deposit_base<ETH, USDC>(pool, coin::mint(&mut eth_data.cap, 60000000000000, ctx), &self.account_cap);
+        clob::place_limit_order(
+        pool,
+        self.client_id,
+        120 * FLOAT_SCALING, 
+        60000000000000,
+        NO_RESTRICTION,
+        false,
+        MAX_U64,
+        NO_RESTRICTION,
+        c,
+        &self.account_cap,
+        ctx
+        );
+
+        self.client_id = self.client_id + 1;
+    }
+
+    public fun create_bid_orders(
+        self: &mut Storage,
+        pool: &mut Pool<ETH, USDC>, // The CLOB pool
+        c: &Clock,
+        ctx: &mut TxContext
+    ) {
+        let usdc_data = df::borrow_mut<TypeName, Data<USDC>>(&mut self.id, get<USDC>());
+
+        clob::deposit_quote<ETH, USDC>(pool, coin::mint(&mut usdc_data.cap, 6000000000000000, ctx), &self.account_cap);
+
+        clob::place_limit_order(
+            pool,
+            self.client_id, 
+            100 * FLOAT_SCALING, 
+            60000000000000,
+            NO_RESTRICTION,
+            true,
+            MAX_U64, 
+            NO_RESTRICTION,
+            c,
+            &self.account_cap,
+            ctx
+        );
+        self.client_id = self.client_id + 1;
+    }
+
+    public fun transfer_coin<CoinType>(c: Coin<CoinType>, sender: address) {
+        if (coin::value(&c) > 0) {
+            coin::destroy_zero(c);
+        } else {
+            transfer::public_transfer(c, sender);
+        };
     }
 }
