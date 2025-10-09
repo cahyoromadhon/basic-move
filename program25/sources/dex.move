@@ -6,9 +6,10 @@ module program25::dex {
     use sui::table::{Self, Table};
     use sui::dynamic_field as df;
     use sui::coin::{Self, TreasuryCap, Coin};
-    use deepbook::clob_v3::{Self as clob, Pool};
-    use deepbook::custodian_v3::AccountCap;
-    use program25::eth::ETH;
+    use deepbook::clob_v2::Pool;
+    use deepbook::clob_v2 as clob;
+    use deepbook::clob_v2::AccountCap;
+    use program25::eth::ETH;m
     use program25::usdc::USDC;
 
     const CLIENT_ID: u64 = 122227; // Example client ID
@@ -152,7 +153,7 @@ module program25::dex {
     }
 
     public fun create_pool(fee: Coin<SUI>, ctx: &mut TxContext) {
-        clob: create_pool<ETH, USDC>(1 * FLOAT_SCALING, 1, fee, ctx)
+        clob: create_pool<ETH, USDC>(1 * FLOAT_SCALING, 1, fee, ctx);
     }
 
     public fun fill_pool(
