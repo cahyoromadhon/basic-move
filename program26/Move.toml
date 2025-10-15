@@ -1,0 +1,13 @@
+[package]
+name = "program26"
+edition = "2024.beta"
+
+[dependencies]
+
+[addresses]
+program26 = "0x0"
+
+[dev-dependencies]
+
+[dev-addresses]
+
